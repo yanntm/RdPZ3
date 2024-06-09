@@ -116,6 +116,23 @@ class PNMLParser:
             self.read_int = False
             self.last_int = -1
 
+        elif name == "pnml":
+            # Patch missing arc targets
+            for arc in self.topatch:
+                src = arc['source']
+                tgt = arc['target']
+
+                if src in self.index and tgt in self.index:
+                    if self.index[src][0]:
+                        # Source is a place
+                        self.net['pre'].append((self.index[src][1], self.index[tgt][1], arc['value']))
+                    else:
+                        # Source is a transition
+                        self.net['post'].append((self.index[tgt][1], self.index[src][1], arc['value']))
+                else:
+                    raise ValueError(f"Problem when linking arc: source or target node not found <{src}, {tgt}>")
+            self.topatch.clear()
+
     def char_data(self, data):
         if self.in_opaque_toolspecific:
             return
